@@ -56,9 +56,25 @@ while True:
         tx_amount = get_transaction_value()
         add_value(tx_amount, get_last_blockchain_value())
     elif user_choice == '2':
-            print_blockchain_elements()
+        print_blockchain_elements()
     elif user_choice == 'h':
-            if len(blockchain) >= 1:
+        if len(blockchain) >= 1:
+            print("Manipulating the chain (not implemented yet).")
+        else:
+            print("Blockchain is empty. Cannot manipulate.")
+    elif user_choice == 'q':
+        print("Exiting the program.")
+        break
+    else:
+        print("Input was invalid. Please pick an option from the list!")
+
+# Output the blockchain list to the console
+for block in blockchain:
+    print('Outputting Block')
+    print(block)
+
+print('Done')
+    
 #    elif user_choice == 'q':
 #            break
         #else:
