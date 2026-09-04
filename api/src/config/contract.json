@@ -1,7 +1,8 @@
 {
-  "network": "smoketest-hardhat-node",
-  "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "deployTxHash": "0xf19855631eebdcbc5951b8f655d91aff81ff7d3a8abee6ef8c876960fb6152bd",
+  "_comment": "PLACEHOLDER address — no real deploy has happened yet. The ABI below IS the real compiled BottleRegistry ABI, and this whole API has been smoke-tested end-to-end against a local Hardhat node standing in for Besu+Web3Signer more than once — see README-BOURBON-PORT.md. Run `cd hardhat && npm run deploy:besu` against the real network to overwrite this file with a real address.",
+  "network": "unset",
+  "address": "0x0000000000000000000000000000000000000000",
+  "deployTxHash": null,
   "abi": [
     {
       "inputs": [],
