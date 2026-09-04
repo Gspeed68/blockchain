@@ -1,0 +1,29 @@
+# Web3Signer signing-key metadata for the app's ONE transaction-signing
+# identity (see scripts/01-create-kms-and-iam.sh — the KMS key is
+# ECC_SECG_P256K1, used only to sign this app's own bottle/appraisal
+# transactions; QBFT validator consensus signing is separate and always
+# local, never KMS-backed).
+#
+# This is a TEMPLATE. scripts/04-configure-web3signer.sh copies it to
+# eth1-app-identity.yaml with ${KMS_KEY_ARN} substituted for the real ARN
+# from scripts/01's output — the rendered file is gitignored (contains
+# nothing secret by itself, but keep account-specific ARNs out of git
+# regardless).
+#
+# Field names verified against Web3Signer's AwsKmsMetadata deserializer
+# (Consensys/web3signer PR #837) but NOT against the exact pinned version's
+# live docs — this sandbox's network policy blocks
+# docs.web3signer.consensys.io. Before the first real run, diff this
+# against https://docs.web3signer.consensys.io/reference/key-config-file-params
+# for the Web3Signer version actually pinned in
+# docker/web3signer/docker-compose.yml, and correct here + note any
+# discrepancy as a dated Correction in README-BOURBON-PORT.md.
+type: "aws-kms"
+kms-key-id: "${KMS_KEY_ARN}"
+region: "${AWS_REGION}"
+# ENVIRONMENT mode uses the standard AWS SDK credential provider chain,
+# which on the EC2 host picks up the instance profile role created in
+# scripts/01-create-kms-and-iam.sh via IMDS automatically — no static
+# access keys anywhere, matching the "no raw credentials" requirement for
+# the whole project, not just the transaction-signing key itself.
+auth-mode: "ENVIRONMENT"

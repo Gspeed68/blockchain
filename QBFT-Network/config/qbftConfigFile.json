@@ -1,0 +1,34 @@
+{
+  "_comment": "Input to `besu operator generate-blockchain-config`. Besu fills in `genesis.extraData` itself from the validator keys it generates — don't hand-author that field (see scripts/04-generate-qbft-genesis.sh for why). Everything else here is used verbatim.",
+
+  "genesis": {
+    "config": {
+      "chainId": 190416,
+      "berlinBlock": 0,
+      "contractSizeLimit": 2147483647,
+      "qbft": {
+        "blockperiodseconds": 2,
+        "epochlength": 30000,
+        "requesttimeoutseconds": 10
+      }
+    },
+    "nonce": "0x0",
+    "timestamp": "0x58ee40ba",
+    "gasLimit": "0x1fffffffffffff",
+    "difficulty": "0x1",
+    "coinbase": "0x0000000000000000000000000000000000000000",
+    "alloc": {
+      "_comment": "Pre-funded accounts for gas. Replace the placeholder key below with the address Web3Signer derives for the app's KMS key (from `aws kms get-public-key` -> Ethereum address, computed by scripts/01-create-kms-key.sh) before generating the real network — see README-BOURBON-PORT.md step 2.",
+      "0x0000000000000000000000000000000000000000": {
+        "balance": "0x446C3B15F9926687D2C40534FDB564000000000000"
+      }
+    }
+  },
+
+  "blockchain": {
+    "nodes": {
+      "generate": true,
+      "count": 4
+    }
+  }
+}

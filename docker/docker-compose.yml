@@ -1,0 +1,168 @@
+name: bourbon-registry
+
+# Brings up: 4 Besu QBFT validators (all on one host for this POC — see
+# scripts/02-provision-ec2.sh for why), Web3Signer in front of validator-1
+# (the app's write path), and Prometheus/Grafana watching all four nodes.
+#
+# Prerequisites (scripts/05-bring-up-stack.sh does all of this for you):
+#   - QBFT-Network/generated/genesis.json                          (script 03)
+#   - docker/besu/validators/validator-{1..4}/{key,key.pub}         (script 05, from script 03's output)
+#   - docker/besu/validators/validator-{1..4}/bootnodes.txt         (script 05, computed from key.pub files)
+#   - docker/web3signer/keys/eth1-app-identity.yaml                 (script 04)
+#
+# Each validator's `command` is wrapped in `sh -c` so it can read its own
+# bootnodes.txt at container start — Besu's own CLI has no "read enode list
+# from file" flag, and every node in this network needs a *different*
+# --bootnodes value (its peers, not itself).
+x-besu-common: &besu-common
+  image: hyperledger/besu:24.7.0
+  restart: unless-stopped
+  networks: [bourbon-net]
+  entrypoint: ["/bin/sh", "-c"]
+
+services:
+  besu-validator-1:
+    <<: *besu-common
+    volumes:
+      - ../QBFT-Network/generated/genesis.json:/data/genesis.json:ro
+      - ./besu/validators/validator-1:/data/node:ro
+      - besu-data-1:/data/db
+    ports:
+      - "8545:8545" # JSON-RPC (also IP-scoped at the SG level on AWS)
+      - "8546:8546" # WebSocket
+      - "30303:30303/tcp"
+      - "30303:30303/udp"
+    command:
+      - >
+        exec besu
+        --genesis-file=/data/genesis.json
+        --node-private-key-file=/data/node/key
+        --data-path=/data/db
+        --bootnodes=$$(cat /data/node/bootnodes.txt)
+        --rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545
+        --rpc-http-api=ETH,NET,QBFT,WEB3
+        --rpc-http-cors-origins="*"
+        --rpc-ws-enabled --rpc-ws-host=0.0.0.0 --rpc-ws-port=8546
+        --host-allowlist="*"
+        --p2p-host=0.0.0.0 --p2p-port=30303
+        --metrics-enabled --metrics-host=0.0.0.0 --metrics-port=9545
+
+  besu-validator-2:
+    <<: *besu-common
+    volumes:
+      - ../QBFT-Network/generated/genesis.json:/data/genesis.json:ro
+      - ./besu/validators/validator-2:/data/node:ro
+      - besu-data-2:/data/db
+    command:
+      - >
+        exec besu
+        --genesis-file=/data/genesis.json
+        --node-private-key-file=/data/node/key
+        --data-path=/data/db
+        --bootnodes=$$(cat /data/node/bootnodes.txt)
+        --rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545
+        --rpc-http-api=ETH,NET,QBFT,WEB3
+        --host-allowlist="*"
+        --p2p-host=0.0.0.0 --p2p-port=30303
+        --metrics-enabled --metrics-host=0.0.0.0 --metrics-port=9545
+
+  besu-validator-3:
+    <<: *besu-common
+    volumes:
+      - ../QBFT-Network/generated/genesis.json:/data/genesis.json:ro
+      - ./besu/validators/validator-3:/data/node:ro
+      - besu-data-3:/data/db
+    command:
+      - >
+        exec besu
+        --genesis-file=/data/genesis.json
+        --node-private-key-file=/data/node/key
+        --data-path=/data/db
+        --bootnodes=$$(cat /data/node/bootnodes.txt)
+        --rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545
+        --rpc-http-api=ETH,NET,QBFT,WEB3
+        --host-allowlist="*"
+        --p2p-host=0.0.0.0 --p2p-port=30303
+        --metrics-enabled --metrics-host=0.0.0.0 --metrics-port=9545
+
+  besu-validator-4:
+    <<: *besu-common
+    volumes:
+      - ../QBFT-Network/generated/genesis.json:/data/genesis.json:ro
+      - ./besu/validators/validator-4:/data/node:ro
+      - besu-data-4:/data/db
+    command:
+      - >
+        exec besu
+        --genesis-file=/data/genesis.json
+        --node-private-key-file=/data/node/key
+        --data-path=/data/db
+        --bootnodes=$$(cat /data/node/bootnodes.txt)
+        --rpc-http-enabled --rpc-http-host=0.0.0.0 --rpc-http-port=8545
+        --rpc-http-api=ETH,NET,QBFT,WEB3
+        --host-allowlist="*"
+        --p2p-host=0.0.0.0 --p2p-port=30303
+        --metrics-enabled --metrics-host=0.0.0.0 --metrics-port=9545
+
+  # Sits in front of besu-validator-1 for writes. The app's backend (api/)
+  # talks to THIS service's RPC endpoint, not Besu's directly — Web3Signer
+  # answers eth_accounts/eth_sendTransaction/eth_signTransaction itself
+  # (signing with the AWS KMS key over IMDS-sourced instance-role
+  # credentials, per docker/web3signer/keys/eth1-app-identity.yaml) and
+  # forwards every other JSON-RPC method straight through to Besu.
+  web3signer:
+    image: consensys/web3signer:24.8.0
+    restart: unless-stopped
+    networks: [bourbon-net]
+    depends_on: [besu-validator-1]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./web3signer/keys:/keys:ro
+    command:
+      - --key-store-path=/keys
+      - --metrics-enabled=true
+      - --metrics-host=0.0.0.0
+      - --metrics-port=9001
+      - eth1
+      - --downstream-http-host=besu-validator-1
+      - --downstream-http-port=8545
+      - --http-listen-host=0.0.0.0
+      - --http-listen-port=9000
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    networks: [bourbon-net]
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.1.4
+    restart: unless-stopped
+    networks: [bourbon-net]
+    depends_on: [prometheus]
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-changeme-locally}
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+networks:
+  bourbon-net:
+    driver: bridge
+
+volumes:
+  besu-data-1:
+  besu-data-2:
+  besu-data-3:
+  besu-data-4:
+  prometheus-data:
+  grafana-data:

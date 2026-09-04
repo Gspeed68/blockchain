@@ -1,0 +1,258 @@
+openapi: 3.0.3
+info:
+  title: Bourbon Registry API
+  version: "1.0.0"
+  description: >
+    REST API in front of the on-chain BottleRegistry contract. See
+    api/API.md for narrated examples and api/src/chain/writeTransaction.ts
+    for the full transaction lifecycle every write goes through.
+servers:
+  - url: http://localhost:4000
+
+components:
+  schemas:
+    Condition:
+      type: string
+      enum: [Sealed, OpenPourable, LowFill, Empty, Damaged]
+
+    Bottle:
+      type: object
+      properties:
+        id: { type: integer }
+        owner: { type: string }
+        distillery: { type: string }
+        bottleName: { type: string }
+        proof: { type: number, example: 100.6 }
+        releaseYear: { type: integer }
+        purchaseDate: { type: string, format: date-time }
+        purchasePriceCents: { type: integer }
+        purchasePriceUsd: { type: string }
+        condition: { $ref: "#/components/schemas/Condition" }
+        fillLevelPercent: { type: number }
+        photoUri: { type: string }
+        photoHash: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    BottleDetail:
+      allOf:
+        - $ref: "#/components/schemas/Bottle"
+        - type: object
+          properties:
+            appraisals:
+              type: array
+              items: { $ref: "#/components/schemas/Appraisal" }
+
+    Appraisal:
+      type: object
+      properties:
+        id: { type: integer }
+        bottleId: { type: integer }
+        valueCents: { type: integer }
+        valueUsd: { type: string }
+        timestamp: { type: string, format: date-time }
+        source: { type: string, example: whiskyhunter }
+        note: { type: string }
+        recordedBy: { type: string }
+
+    NewBottle:
+      type: object
+      required: [distillery, bottleName, proof, releaseYear, purchaseDate, purchasePriceCents, condition, fillLevelPercent, photoUri]
+      properties:
+        distillery: { type: string }
+        bottleName: { type: string }
+        proof: { type: number }
+        releaseYear: { type: integer }
+        purchaseDate: { type: string, format: date }
+        purchasePriceCents: { type: integer }
+        condition: { $ref: "#/components/schemas/Condition" }
+        fillLevelPercent: { type: number }
+        photoUri: { type: string }
+        photoHash: { type: string, pattern: "^0x[0-9a-fA-F]{64}$" }
+
+    UpdateCondition:
+      type: object
+      required: [condition, fillLevelPercent]
+      properties:
+        condition: { $ref: "#/components/schemas/Condition" }
+        fillLevelPercent: { type: number }
+
+    NewAppraisal:
+      type: object
+      required: [valueCents]
+      properties:
+        valueCents: { type: integer }
+        note: { type: string }
+
+    WriteResultConfirmed:
+      type: object
+      properties:
+        status: { type: string, enum: [confirmed] }
+        transaction:
+          type: object
+          properties:
+            txHash: { type: string }
+            blockNumber: { type: integer }
+            gasUsed: { type: string }
+        data: {}
+
+    WriteResultPending:
+      type: object
+      properties:
+        status: { type: string, enum: [pending] }
+        txHash: { type: string }
+        message: { type: string }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+
+paths:
+  /health:
+    get:
+      summary: Chain + signer connectivity check
+      responses:
+        "200": { description: healthy }
+        "503": { description: degraded — Besu or Web3Signer unreachable }
+
+  /bottles:
+    get:
+      summary: List the collection (reads the chain directly)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Bottle" }
+    post:
+      summary: Add a bottle (writes addBottle, seeds a "purchase" appraisal)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewBottle" }
+      responses:
+        "201":
+          description: Confirmed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WriteResultConfirmed" }
+        "202":
+          description: Submitted, still pending
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WriteResultPending" }
+        "400":
+          description: Invalid request, or the transaction would revert
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /bottles/{id}:
+    get:
+      summary: Bottle detail + full appraisal history
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BottleDetail" }
+        "404":
+          description: Unknown bottle id
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /bottles/{id}/condition:
+    patch:
+      summary: Update condition / fill level
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCondition" }
+      responses:
+        "201": { description: Confirmed, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultConfirmed" } } } }
+        "202": { description: Pending, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultPending" } } } }
+
+  /bottles/{id}/appraisals:
+    get:
+      summary: Full appraisal history for a bottle
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Appraisal" }
+    post:
+      summary: Record a manual appraisal
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NewAppraisal" }
+      responses:
+        "201": { description: Confirmed, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultConfirmed" } } } }
+        "202": { description: Pending, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultPending" } } } }
+
+  /bottles/{id}/appraisals/refresh:
+    post:
+      summary: Fetch an estimated value from the configured external source and record it on-chain
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "201": { description: Confirmed, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultConfirmed" } } } }
+        "202": { description: Pending, content: { application/json: { schema: { $ref: "#/components/schemas/WriteResultPending" } } } }
+        "404":
+          description: No valuation data found from any configured source
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /uploads:
+    post:
+      summary: Upload a bottle photo (off-chain storage); returns URI + sha256 hash
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                photo: { type: string, format: binary }
+      responses:
+        "201":
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photoUri: { type: string }
+                  photoHash: { type: string }
+
+  /transactions/{txHash}:
+    get:
+      summary: Look up a transaction's pending/confirmed/reverted status directly
+      parameters:
+        - { name: txHash, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+        "404":
+          description: Unknown transaction hash
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }

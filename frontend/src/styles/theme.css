@@ -1,0 +1,139 @@
+/* Design tokens. Palette follows the categorical/status scheme validated by
+   the project's dataviz guidelines (see README-BOURBON-PORT.md) — slot-2
+   "orange" doubles as this app's brand accent (it reads as amber/copper,
+   which happens to suit a bourbon app) and is reused, not re-picked, for
+   the value-over-time chart's single series so the two never clash. */
+:root {
+  color-scheme: light;
+
+  --surface-0: #f9f9f7; /* page plane */
+  --surface-1: #fcfcfb; /* card surface */
+  --surface-2: #ffffff;
+  --text-primary: #17130f;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --border: rgba(11, 11, 11, 0.1);
+  --border-strong: #c3c2b7;
+
+  --accent: #eb6834; /* categorical slot 2 (orange) — brand accent + chart series */
+  --accent-ink: #ffffff;
+  --accent-soft: #fdecdf;
+
+  --status-good: #0ca30c;
+  --status-good-soft: #e7f6e5;
+  --status-warning: #b8790a; /* darkened from the reference #fab219 for AA text-on-soft */
+  --status-warning-soft: #fdf1da;
+  --status-serious: #c25a34;
+  --status-serious-soft: #fbe9e0;
+  --status-critical: #d03b3b;
+  --status-critical-soft: #fbe4e4;
+  --status-neutral: #52514e;
+  --status-neutral-soft: #ecebe7;
+
+  --shadow-card: 0 1px 2px rgba(23, 19, 15, 0.04), 0 8px 24px -12px rgba(23, 19, 15, 0.18);
+  --shadow-card-hover: 0 4px 10px rgba(23, 19, 15, 0.06), 0 16px 32px -14px rgba(23, 19, 15, 0.24);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #0d0d0c;
+    --surface-1: #171613;
+    --surface-2: #1f1e1a;
+    --text-primary: #f7f5f2;
+    --text-secondary: #c3c2b7;
+    --text-muted: #8f8d86;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: #3a3934;
+
+    --accent: #d95926;
+    --accent-ink: #17130f;
+    --accent-soft: #3a2415;
+
+    --status-good: #0ca30c;
+    --status-good-soft: #17321a;
+    --status-warning: #c98500;
+    --status-warning-soft: #332a10;
+    --status-serious: #d97a52;
+    --status-serious-soft: #33231a;
+    --status-critical: #e66767;
+    --status-critical-soft: #3a1f1f;
+    --status-neutral: #c3c2b7;
+    --status-neutral-soft: #262521;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    --shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 32px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #0d0d0c;
+  --surface-1: #171613;
+  --surface-2: #1f1e1a;
+  --text-primary: #f7f5f2;
+  --text-secondary: #c3c2b7;
+  --text-muted: #8f8d86;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: #3a3934;
+
+  --accent: #d95926;
+  --accent-ink: #17130f;
+  --accent-soft: #3a2415;
+
+  --status-good: #0ca30c;
+  --status-good-soft: #17321a;
+  --status-warning: #c98500;
+  --status-warning-soft: #332a10;
+  --status-serious: #d97a52;
+  --status-serious-soft: #33231a;
+  --status-critical: #e66767;
+  --status-critical-soft: #3a1f1f;
+  --status-neutral: #c3c2b7;
+  --status-neutral-soft: #262521;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 32px -14px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}

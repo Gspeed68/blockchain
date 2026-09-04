@@ -1,0 +1,202 @@
+.bottle-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 960px;
+}
+
+.bottle-detail__back {
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bottle-detail__header {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.bottle-detail__photo {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--accent-soft), var(--surface-2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.bottle-detail__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bottle-detail__photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+}
+
+.bottle-detail__distillery {
+  margin: 0 0 2px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.bottle-detail__header h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 8px;
+}
+
+.bottle-detail__badges {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bottle-detail__stat {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.bottle-detail__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .bottle-detail__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bottle-detail__section {
+  padding: 18px 20px 20px;
+}
+
+.bottle-detail__section h2 {
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+}
+
+.bottle-detail__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.bottle-detail__section-head h2 {
+  margin-bottom: 0;
+}
+
+.bottle-detail__facts {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.bottle-detail__facts dt {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bottle-detail__facts dd {
+  margin: 2px 0 0;
+  font-size: 0.95rem;
+}
+
+.bottle-detail__mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.78rem;
+  word-break: break-all;
+  color: var(--text-secondary);
+}
+
+.bottle-detail__condition-form {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bottle-detail__condition-form h3 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.bottle-detail__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.bottle-detail__table th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  padding: 0 10px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.bottle-detail__table td {
+  padding: 10px 10px 10px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.bottle-detail__table-value {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bottle-detail__table-note {
+  color: var(--text-secondary);
+  max-width: 360px;
+}
+
+.bottle-detail__manual-form {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.bottle-detail__manual-form h3 {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.bottle-detail__manual-fields {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.field--grow {
+  flex: 1;
+  min-width: 200px;
+}

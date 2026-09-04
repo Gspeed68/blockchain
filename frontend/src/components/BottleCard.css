@@ -1,0 +1,95 @@
+.bottle-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bottle-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.bottle-card__photo {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(160deg, var(--accent-soft), var(--surface-2));
+  overflow: hidden;
+}
+
+.bottle-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.bottle-card__photo-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.75rem;
+}
+
+.bottle-card__badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.bottle-card__body {
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bottle-card__distillery {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.bottle-card__name {
+  margin: 2px 0 4px;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.bottle-card__meta {
+  display: flex;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.bottle-card__price {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bottle-card__price-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.bottle-card__price-value {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1rem;
+}
