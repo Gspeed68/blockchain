@@ -8,7 +8,7 @@ import * as path from "path";
  * without any manual copy/paste. Run with:
  *
  *   npm run deploy:local   (against a local hardhat/besu node)
- *   npm run deploy:besu    (against the real network, signed via Web3Signer/KMS)
+ *   npm run deploy:besu    (against the real network, signed via Web3Signer/Key Vault)
  */
 async function main() {
   const [deployer] = await ethers.getSigners();

@@ -1,29 +1,31 @@
 # Web3Signer signing-key metadata for the app's ONE transaction-signing
-# identity (see scripts/01-create-kms-and-iam.sh — the KMS key is
-# ECC_SECG_P256K1, used only to sign this app's own bottle/appraisal
-# transactions; QBFT validator consensus signing is separate and always
-# local, never KMS-backed).
+# identity (see scripts/01-create-keyvault-and-identity.sh — the key is an
+# Azure Key Vault EC key on curve P-256K/secp256k1; QBFT validator
+# consensus signing is separate and always local, never vault-backed).
 #
 # This is a TEMPLATE. scripts/04-configure-web3signer.sh copies it to
-# eth1-app-identity.yaml with ${KMS_KEY_ARN} substituted for the real ARN
-# from scripts/01's output — the rendered file is gitignored (contains
-# nothing secret by itself, but keep account-specific ARNs out of git
-# regardless).
+# eth1-app-identity.yaml with the real vault/key/tenant values substituted
+# in — the rendered file is gitignored (nothing secret in it by itself
+# since auth-mode is managed-identity, no client secret involved, but keep
+# account-specific names out of git regardless).
 #
-# Field names verified against Web3Signer's AwsKmsMetadata deserializer
-# (Consensys/web3signer PR #837) but NOT against the exact pinned version's
-# live docs — this sandbox's network policy blocks
-# docs.web3signer.consensys.io. Before the first real run, diff this
-# against https://docs.web3signer.consensys.io/reference/key-config-file-params
+# Field names (type, vault-name, key-name, tenant-id, client-id, auth-mode)
+# reconstructed from Web3Signer's AzureKeyVaultParameters interface and its
+# documented CLI equivalents (--azure-vault-name, --azure-tenant-id,
+# --azure-client-id, --azure-auth-mode) rather than a live docs page — this
+# sandbox's network policy blocks docs.web3signer.consensys.io, same as it
+# did for the AWS KMS config this replaced. Before the first real run, diff
+# this against https://docs.web3signer.consensys.io/reference/key-config-file-params
 # for the Web3Signer version actually pinned in
 # docker/web3signer/docker-compose.yml, and correct here + note any
 # discrepancy as a dated Correction in README-BOURBON-PORT.md.
-type: "aws-kms"
-kms-key-id: "${KMS_KEY_ARN}"
-region: "${AWS_REGION}"
-# ENVIRONMENT mode uses the standard AWS SDK credential provider chain,
-# which on the EC2 host picks up the instance profile role created in
-# scripts/01-create-kms-and-iam.sh via IMDS automatically — no static
-# access keys anywhere, matching the "no raw credentials" requirement for
-# the whole project, not just the transaction-signing key itself.
-auth-mode: "ENVIRONMENT"
+type: "azure-key"
+vault-name: "${AZURE_KEY_VAULT_NAME}"
+key-name: "bourbon-registry-signer"
+tenant-id: "${AZURE_TENANT_ID}"
+# SYSTEM_ASSIGNED_MANAGED_IDENTITY uses the VM's own managed identity (see
+# scripts/02-provision-vm.sh, which grants it Key Vault Crypto User scoped
+# to exactly this key) — no client-id/client-secret anywhere, matching the
+# "no raw credentials" requirement for the whole project, not just the
+# transaction-signing key itself.
+auth-mode: "SYSTEM_ASSIGNED_MANAGED_IDENTITY"

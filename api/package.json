@@ -2,7 +2,7 @@
   "name": "bourbon-registry-api",
   "version": "1.0.0",
   "private": true,
-  "description": "Backend API for the bourbon collection app: signs and sends transactions through Web3Signer (KMS-backed), reads chain state back for every GET, and fetches external valuations.",
+  "description": "Backend API for the bourbon collection app: signs and sends transactions through Web3Signer (Azure Key Vault-backed), reads chain state back for every GET, and fetches external valuations.",
   "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {

@@ -46,11 +46,11 @@ export interface PendingWrite {
 
 /**
  * The signer address Web3Signer manages for this app. It's the same
- * address every time (one KMS key, see README-BOURBON-PORT.md), so we
- * fetch it once via `eth_accounts` and cache it rather than asking on every
- * write. `eth_accounts` against Web3Signer (NOT Besu — Besu itself holds
- * no keys and would just return an empty array) is how Web3Signer tells a
- * client which addresses it's willing to sign for.
+ * address every time (one Azure Key Vault key, see README-BOURBON-PORT.md),
+ * so we fetch it once via `eth_accounts` and cache it rather than asking on
+ * every write. `eth_accounts` against Web3Signer (NOT Besu — Besu itself
+ * holds no keys and would just return an empty array) is how Web3Signer
+ * tells a client which addresses it's willing to sign for.
  */
 let cachedSignerAddress: string | undefined;
 
@@ -60,7 +60,7 @@ async function getSignerAddress(): Promise<string> {
   if (accounts.length === 0) {
     throw new Error(
       "Web3Signer returned no accounts. Check docker/web3signer/keys/eth1-app-identity.yaml is present " +
-        "and Web3Signer's logs for an AWS KMS auth error (IMDS role, key ARN, region)."
+        "and Web3Signer's logs for an Azure Key Vault auth error (managed identity, vault name, tenant)."
     );
   }
   cachedSignerAddress = accounts[0];
@@ -76,7 +76,7 @@ async function getSignerAddress(): Promise<string> {
  *
  * The steps, in order:
  *
- *  1. Resolve the signer address (the KMS-backed identity Web3Signer holds).
+ *  1. Resolve the signer address (the Key Vault-backed identity Web3Signer holds).
  *  2. ABI-encode the call.
  *  3. `eth_estimateGas` FIRST, against the same node that will execute the
  *     real transaction. This is a dry run: if the call would revert (e.g.
@@ -93,10 +93,11 @@ async function getSignerAddress(): Promise<string> {
  *     so it's a single legacy `gasPrice` field, not `maxFeePerGas`/
  *     `maxPriorityFeePerGas`.
  *  6. Send the fully-formed transaction to *Web3Signer's* `eth_sendTransaction`
- *     — not Besu's. Web3Signer recognizes `from` as its KMS-backed address,
- *     signs the transaction with that key (the private key never leaves
- *     AWS KMS — Web3Signer sends KMS the transaction hash and gets back a
- *     signature), and forwards the signed raw transaction to Besu itself.
+ *     — not Besu's. Web3Signer recognizes `from` as its Key Vault-backed
+ *     address, signs the transaction with that key (the private key never
+ *     leaves Azure Key Vault — Web3Signer sends the vault the transaction
+ *     hash and gets back a signature), and forwards the signed raw
+ *     transaction to Besu itself.
  *     The call returns a transaction hash immediately — that's the
  *     "pending" state: the node has accepted it into its mempool, but no
  *     block has included it yet.
@@ -164,7 +165,8 @@ export async function sendContractWrite(
 
   // Step 6: Web3Signer, not Besu. This is the only network call in the
   // entire write path that touches the private key (indirectly — Web3Signer
-  // calls AWS KMS's Sign API; the key material itself never leaves KMS).
+  // calls Azure Key Vault's Sign API; the key material itself never leaves
+  // the vault).
   const txHash = await rpcCall<string>(env.WEB3SIGNER_RPC_URL, "eth_sendTransaction", [txParams]);
   logger.info({ functionName, txHash }, "chain:transaction-submitted-pending");
 

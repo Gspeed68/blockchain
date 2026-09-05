@@ -4,7 +4,7 @@
 # success — "docker compose up -d" succeeding is not the same as the
 # network actually working.
 #
-# Run this ON THE EC2 HOST after copying the repo there (or locally against
+# Run this ON THE AZURE VM after copying the repo there (or locally against
 # a Docker daemon for a dry run — the compose file doesn't know or care
 # which).
 set -euo pipefail
@@ -64,11 +64,11 @@ if [ "${PEER_COUNT}" -lt 1 ]; then
 fi
 
 echo
-echo "== Confirming Web3Signer can see the KMS-backed account =="
+echo "== Confirming Web3Signer can see the vault-backed account =="
 curl -s -X POST http://localhost:9000 -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_accounts","params":[]}'
 echo
-echo "(should list exactly one address — the app identity from scripts/01-create-kms-and-iam.sh)"
+echo "(should list exactly one address — the app identity from scripts/01-create-keyvault-and-identity.sh)"
 
 echo
 echo "== Stack is up =="

@@ -1,17 +1,24 @@
 # Bourbon Registry — build log
 
 This is the running record for this project, in the same spirit as the prior
-Besu/QBFT-on-AWS port: architecture decisions, the exact order things need to
-run in, and — critically — a dated **Correction** section any time something
-built here turned out to be wrong, rather than silently fixing it and moving
-on.
+Besu/QBFT private-network project: architecture decisions, the exact order
+things need to run in, and — critically — a dated **Correction** section any
+time something built here turned out to be wrong, rather than silently
+fixing it and moving on.
+
+**Cloud target: this project runs on Azure, not AWS.** It was originally
+scaffolded against AWS (KMS + IAM + EC2), then switched to Azure (Key Vault +
+Managed Identity + VM) before anything was ever deployed for real — see the
+dated **2026-09-05 — Pivot: AWS to Azure** entry in Corrections for exactly
+what that changed and, just as importantly, what it *didn't* (the contract,
+API, and frontend are entirely cloud-agnostic and were untouched).
 
 **Read this before running anything.** The single most important fact about
-this build: **it was produced in a sandboxed dev session with no AWS CLI, no
-running Docker daemon, and a network egress allowlist that blocks most of the
-docs sites and third-party APIs this project depends on.** So this is a
+this build: **it was produced in a sandboxed dev session with no Azure CLI,
+no running Docker daemon, and a network egress allowlist that blocks most of
+the docs sites and third-party APIs this project depends on.** So this is a
 complete, internally-consistent POC that has been verified as thoroughly as
-that sandbox allows — but the AWS provisioning, the real Besu/QBFT network,
+that sandbox allows — but the Azure provisioning, the real Besu/QBFT network,
 and the real external valuation APIs have **not** been run against anything
 real yet. See "Verification status" below for exactly what was and wasn't
 exercised, and by what.
@@ -34,12 +41,15 @@ exercised, and by what.
                                  ┌─────▼─────┐                       ┌───────▼──────┐
                                  │   Besu    │◄──downstream_http─────│  Web3Signer  │
                                  │ (x4 QBFT  │                       │ (signs with  │
-                                 │ validators)│                      │  AWS KMS key)│
-                                 └───────────┘                       └───────┬──────┘
+                                 │ validators)│                      │ Azure Key    │
+                                 └───────────┘                       │ Vault key)   │
+                                                                      └───────┬──────┘
                                                                               │
-                                                                        AWS KMS Sign()
-                                                                     (ECC_SECG_P256K1,
-                                                                    key never leaves KMS)
+                                                                    Key Vault Sign()
+                                                                  over VM's managed
+                                                                       identity
+                                                                 (P-256K/secp256k1,
+                                                              key never leaves the vault)
 ```
 
 The frontend never touches the chain or holds any chain concept (no ethers.js
@@ -52,13 +62,14 @@ confirmed, reverts).
 
 ### Why this shape
 
-- **One KMS key, not two.** This app has no marketplace/transfer concept —
-  every write is made by the app's own backend identity. A second
-  "counterparty" KMS key only makes sense once there's an actual second
-  party (a transfer/marketplace feature). Building one now, speculatively,
-  is exactly the kind of mistake worth avoiding — see the Corrections
-  section on the *prior* project for the KMS key-count mistake this is
-  deliberately not repeating.
+- **One Key Vault key, not two.** This app has no marketplace/transfer
+  concept — every write is made by the app's own backend identity. A second
+  "counterparty" key only makes sense once there's an actual second party (a
+  transfer/marketplace feature). Building one now, speculatively, is exactly
+  the kind of mistake worth avoiding — see the Corrections section on the
+  *prior* project for the KMS key-count mistake this is deliberately not
+  repeating (the lesson carried over even though the cloud and the vault
+  product both changed).
 - **4 validators.** QBFT tolerates `f` faulty nodes with `N >= 3f+1`; `N=4`
   is the smallest network that tolerates any faulty validator at all
   (`f=1`) and is Besu's own commonly-documented minimum for a real QBFT
@@ -68,9 +79,9 @@ confirmed, reverts).
   there, so 4 is this project's own from-first-principles default, not a
   literal port. Change `QBFT-Network/config/qbftConfigFile.json`'s
   `blockchain.nodes.count` if you want more.
-- **All 4 validators on one EC2 instance**, not one instance each. This is a
+- **All 4 validators on one Azure VM**, not one VM each. This is a
   personal-collection POC, not a fault-tolerant-against-host-failure
-  deployment — see `scripts/02-provision-ec2.sh`'s comment for the
+  deployment — see `scripts/02-provision-vm.sh`'s comment for the
   reasoning. Four validator *processes* still gives real QBFT consensus and
   real peering to learn from.
 - **GETs never touch a local database — only the chain.** `api/src/services/bottleService.ts`
@@ -97,50 +108,63 @@ you need to do to actually run it for real.
 Layout matches the brief: `contracts/`, `hardhat/`, `QBFT-Network/`,
 `docker/`, `scripts/`, `api/`, `frontend/`.
 
-### 2. AWS auth check, then KMS + IAM
+### 2. Azure auth check, then Key Vault + identity
 
-`scripts/00-check-aws-auth.sh` (confirms `aws sts get-caller-identity`,
-`aws sso login` retry), `scripts/01-create-kms-and-iam.sh` (one
-`ECC_SECG_P256K1` KMS key, an IAM policy scoped to exactly that key's ARN, a
-role + instance profile for EC2).
+`scripts/00-check-azure-auth.sh` (confirms `az account show`, `az login
+--use-device-code` retry), `scripts/01-create-keyvault-and-identity.sh`
+(a resource group, an RBAC-authorization Key Vault, one EC key on curve
+`P-256K`/secp256k1). Unlike the AWS/IAM version, the access grant on that
+key does **not** happen in this script — see script 3 below.
 
-**Not run**: this sandbox has no `aws` CLI at all (`which aws` → not found),
-so nothing has touched a real AWS account. Run these yourself once you have
-`aws` configured with IAM Identity Center SSO.
+**Not run**: this sandbox has no `az` CLI installed yet (a plain `aws` CLI
+was installed earlier in this session, before the pivot to Azure, and is now
+vestigial for this project), so nothing has touched a real Azure
+subscription. Run these yourself once you have `az` configured and
+authenticated via Entra ID.
 
-**Verified independently**: the Ethereum-address-from-KMS-public-key
-derivation (`scripts/lib/derive-eth-address.js`, the trickiest part of this
-script — DER parsing + keccak256) was tested against a real secp256k1
-keypair generated with Node's own `crypto.generateKeyPairSync` (encoded as
-X.509 SPKI DER exactly like `aws kms get-public-key` returns) and confirmed
-to produce the same address as deriving it directly from the private key.
+**Verified independently**: the Ethereum-address-from-Key-Vault-public-key
+derivation (`scripts/lib/derive-eth-address-azure.js`) was tested against a
+real secp256k1 keypair generated with Node's own `crypto.generateKeyPairSync`,
+with its raw X/Y coordinates base64url-encoded exactly like the JWK
+`az keyvault key show` returns, and confirmed to produce the same address as
+deriving it directly from the private key. This derivation is actually
+*simpler* than the AWS KMS version it replaced — Azure hands back raw JWK
+coordinates directly, with no DER/ASN.1 unwrapping needed.
 
-### 3. EC2 provisioning + QBFT genesis/validator keys
+### 3. VM provisioning + QBFT genesis/validator keys
 
-`scripts/02-provision-ec2.sh` (IP-scoped security group, refreshed
-automatically if your IP changes; one `t3.large` running everything via
-Docker Compose). `scripts/03-generate-qbft-genesis.sh` shells out to Besu's
-own `operator generate-blockchain-config` (via Docker) rather than
-hand-rolling the QBFT genesis `extraData` RLP encoding — see that script's
-comment for why a subtly-wrong hand-rolled RLP encoder is a worse bet than
-depending on Besu's tested implementation.
+`scripts/02-provision-vm.sh` (IP-scoped NSG rule, refreshed automatically if
+your IP changes; one `Standard_D2s_v5` VM running everything via Docker
+Compose, with a system-assigned managed identity). This is also where the
+Key Vault access grant happens — Azure only generates the managed identity's
+principal ID once the VM exists, so scoping "Key Vault Crypto User" to
+exactly this key (via the key's own resource ID, not the whole vault) has to
+come after VM creation, the reverse of the AWS/IAM ordering (which created
+the role before the EC2 instance that would assume it).
+`scripts/03-generate-qbft-genesis.sh` shells out to Besu's own `operator
+generate-blockchain-config` (via Docker) rather than hand-rolling the QBFT
+genesis `extraData` RLP encoding — see that script's comment for why a
+subtly-wrong hand-rolled RLP encoder is a worse bet than depending on Besu's
+tested implementation. This part of the pipeline is identical under Azure;
+Besu doesn't know or care which cloud it's running on.
 
-**Not run**: no `aws` CLI, and no running Docker daemon in this sandbox
-(`docker ps` → "cannot connect to the Docker daemon"), so neither script
-executed for real.
+**Not run**: no `az` CLI configured, and no running Docker daemon in this
+sandbox (`docker ps` → "cannot connect to the Docker daemon"), so none of
+these scripts executed for real.
 
-### 4. Web3Signer key config for the KMS identity
+### 4. Web3Signer key config for the Key Vault identity
 
 `docker/web3signer/keys/eth1-app-identity.yaml.template` +
-`scripts/04-configure-web3signer.sh`. Field names (`type: aws-kms`,
-`kms-key-id`, `region`, `auth-mode`) were confirmed against Web3Signer's
-`AwsKmsMetadata`/`AwsKmsMetadataDeserializer` source
-(`Consensys/web3signer` PR #837) rather than the live docs site, which this
-sandbox's network policy blocks (`docs.web3signer.consensys.io` is not in
-the egress allowlist). **Before the first real run**, diff the rendered
-YAML against that page for the exact Web3Signer version pinned in
-`docker/docker-compose.yml` (currently `24.8.0`) — the template file says
-the same thing.
+`scripts/04-configure-web3signer.sh`. Field names (`type: azure-key`,
+`vault-name`, `key-name`, `tenant-id`, `auth-mode:
+SYSTEM_ASSIGNED_MANAGED_IDENTITY`) were reconstructed from Web3Signer's
+`AzureKeyVaultParameters` interface and its documented CLI equivalents
+(`--azure-vault-name`, `--azure-tenant-id`, `--azure-auth-mode`) rather than
+the live docs site, which this sandbox's network policy blocks
+(`docs.web3signer.consensys.io` is not in the egress allowlist, same as it
+wasn't for the AWS KMS config this replaced). **Before the first real run**,
+diff the rendered YAML against that page for the exact Web3Signer version
+pinned in `docker/docker-compose.yml` (currently `24.8.0`).
 
 ### 5. Bring up Besu/Web3Signer/monitoring, confirm block production + peering
 
@@ -171,7 +195,7 @@ append-only `recordAppraisal`, `updateCondition`, the `NotAdmin` and
 `BottleNotFound` custom-error reverts) via raw JSON-RPC calls, matching
 `hardhat/test/BottleRegistry.test.ts`'s assertions. All checks passed. `npx
 hardhat compile`/`npm test` will work normally anywhere
-`binaries.soliditylang.org` is reachable (your machine, CI, EC2).
+`binaries.soliditylang.org` is reachable (your machine, CI, the Azure VM).
 
 ### 7. Backend API — written and smoke-tested end to end
 
@@ -188,8 +212,8 @@ the error paths (`400 transaction_would_revert`... `404
 contract_call_reverted` with a decoded `BottleNotFound(999)`, Zod
 validation `400`s).
 
-**Not verified**: the real Web3Signer + AWS KMS signing path itself (no
-live Web3Signer to test against), and the WhiskyHunter/eBay valuation
+**Not verified**: the real Web3Signer + Azure Key Vault signing path itself
+(no live Web3Signer to test against), and the WhiskyHunter/eBay valuation
 providers against their real APIs (see step 8).
 
 ### 8. Valuation source — researched, chosen, documented; integration unverified live
@@ -226,16 +250,17 @@ The local-Hardhat-network version of steps 6+7+9 above collectively *is*
 the end-to-end test the brief asks for (add a bottle → confirm it shows up
 → refresh/record a valuation → confirm it's in the appraisal history →
 confirm it renders in the frontend, chart included) — just not against the
-real Besu/QBFT/Web3Signer/KMS stack, because that stack was never brought
-up in this sandbox. Once you've run steps 2-5 for real, re-run this same
-walkthrough against the real network as the final check.
+real Besu/QBFT/Web3Signer/Key Vault stack, because that stack was never
+brought up in this sandbox. Once you've run steps 2-5 for real, re-run this
+same walkthrough against the real network as the final check.
 
 ---
 
-## What to check first (in order) once you have real AWS/Docker access
+## What to check first (in order) once you have real Azure/Docker access
 
-1. `scripts/00-check-aws-auth.sh` then `scripts/01-create-kms-and-iam.sh` —
-   confirm the derived app-identity address looks sane, and paste it into
+1. `scripts/00-check-azure-auth.sh` then
+   `scripts/01-create-keyvault-and-identity.sh` — confirm the derived
+   app-identity address looks sane, and paste it into
    `QBFT-Network/config/qbftConfigFile.json`'s `alloc` block.
 2. `scripts/03-generate-qbft-genesis.sh`, then **look at what it actually
    produced** under `QBFT-Network/generated/` before trusting
@@ -244,8 +269,11 @@ walkthrough against the real network as the final check.
    `key.pub`, directly under the output dir). If Besu's current version
    lays it out differently, fix the discovery logic there and note it as a
    dated Correction below.
-3. `scripts/02-provision-ec2.sh`, `scripts/04-configure-web3signer.sh`
-   (diff against the live Web3Signer docs first, see step 4 above), then
+3. `scripts/02-provision-vm.sh` (also grants the VM's managed identity
+   access to the Key Vault key — watch for the WARNING it prints if the
+   object-level role assignment doesn't work on your az CLI version, see
+   that script's comment), `scripts/04-configure-web3signer.sh` (diff
+   against the live Web3Signer docs first, see step 4 above), then
    `scripts/05-bring-up-stack.sh` — it will tell you plainly if blocks
    aren't being produced or peering isn't happening, rather than silently
    "succeeding."
@@ -253,8 +281,8 @@ walkthrough against the real network as the final check.
    `api/src/config/contract.json` got overwritten with a real address.
 5. Point `api/.env` at the real `BESU_RPC_URL`/`WEB3SIGNER_RPC_URL`, restart
    the API, hit `GET /health` — both `besu.ok` and `web3signer.ok` should be
-   true, and `web3signer.accounts` should show exactly the KMS-derived
-   address.
+   true, and `web3signer.accounts` should show exactly the Key
+   Vault-derived address.
 6. Run through `api/API.md`'s examples for real, then load the frontend.
 
 ---
@@ -289,29 +317,37 @@ new file, not touching `bottleService.ts` or any route.
 |---|---|---|
 | `BottleRegistry.sol` | Compiled with `solc` directly (viaIR); deployed + exercised via raw JSON-RPC against a local Hardhat network (every function, both custom-error revert paths) | Deploy against real Besu QBFT |
 | `hardhat/` | `hardhat.config.ts` paths/network config reviewed; `deploy.ts` logic exercised manually (same steps, via a scratch script) | `npx hardhat compile`/`test` themselves (blocked: `binaries.soliditylang.org`) |
-| `api/` | Full endpoint suite smoke-tested live (see step 7); `tsc --noEmit` clean | Real Web3Signer/KMS signing; live WhiskyHunter/eBay calls |
+| `api/` | Full endpoint suite smoke-tested live (see step 7); `tsc --noEmit` clean | Real Web3Signer/Key Vault signing; live WhiskyHunter/eBay calls |
 | `frontend/` | `tsc -b` + `vite build` clean; visually screenshotted (light + dark) against a live API | — |
-| `scripts/00`–`02` (AWS) | Address-derivation math verified independently; script logic reviewed | Not run — no `aws` CLI in this sandbox |
+| `scripts/00`–`02` (Azure) | Address-derivation math verified independently; script logic reviewed | Not run — no `az` CLI configured in this sandbox |
 | `scripts/03`–`05` (genesis/bring-up) | Script logic reviewed; genesis-generation approach deliberately delegates to Besu's own tooling instead of a hand-rolled implementation | Not run — no Docker daemon in this sandbox |
-| Web3Signer AWS KMS config | Field names confirmed against Web3Signer source (PR #837) | Not diffed against live docs (blocked) or run |
+| Web3Signer Azure Key Vault config | Field names reconstructed from Web3Signer's `AzureKeyVaultParameters` interface + CLI flag docs | Not diffed against live key-config docs (blocked) or run |
+| Key Vault object-level RBAC scoping | Scope string pattern (`.../vaults/<name>/keys/<key>`) reviewed against Microsoft's documented Key Vault RBAC scoping model | Not run — `scripts/02-provision-vm.sh` has a documented fallback to vault-wide scope if this doesn't work on a given az CLI version |
 
 ---
 
 ## Guardrails followed
 
-- No AWS resources have been created — no AWS CLI was even available in
-  this sandbox. Nothing in `scripts/` has been executed against a real
-  account.
-- IAM: `scripts/01-create-kms-and-iam.sh` creates one policy scoped to
-  exactly the one KMS key this project creates — nothing broader.
+- No Azure resources have been created — no `az` CLI was configured in this
+  sandbox for this pivot. Nothing in `scripts/` has been executed against a
+  real subscription. (An `aws` CLI was installed earlier in the same
+  sandbox session, before the AWS→Azure pivot, and never authenticated
+  against a real account either — see the Pivot correction entry.)
+- RBAC: `scripts/02-provision-vm.sh` grants the VM's managed identity "Key
+  Vault Crypto User" scoped to exactly the one key this project creates
+  (falling back to vault-wide scope only if the narrower grant isn't
+  supported, with a loud warning when that happens) — nothing broader.
 - Nothing destructive was run or scripted without an explicit ask-first
-  path — `scripts/02-provision-ec2.sh` refuses to create a second instance
-  if one already exists rather than replacing it, and none of the scripts
-  delete anything.
+  path — `scripts/02-provision-vm.sh` refuses to create a second VM if one
+  already exists rather than replacing it, and none of the scripts delete
+  anything.
 - No secrets are committed: `.env`/`.env.*` (except `.env.example`),
   `QBFT-Network/generated/`, `QBFT-Network/validator-keys/*`,
   `docker/web3signer/keys/*.yaml` (the rendered one, not the template), and
-  `*.pem` are all gitignored.
+  `*.pem`/SSH keys are all gitignored. (Azure's managed-identity auth mode
+  means there's no client secret to leak in the Web3Signer config at all —
+  narrower than the AWS version's IMDS-role approach only in that there's
+  one less credential shape to worry about.)
 
 ---
 
@@ -319,6 +355,55 @@ new file, not touching `bottleService.ts` or any route.
 
 Dated, in the spirit of the prior project's habit — recording what didn't
 work on the first attempt rather than silently fixing it.
+
+### 2026-09-05 — Pivot: AWS to Azure
+
+Decided to run this project on Azure instead of AWS, before anything had
+been deployed against a real account either way (no AWS resources ever
+existed beyond a local `aws` CLI install with no valid credentials — see
+"Guardrails followed"). What changed and what didn't, concretely:
+
+**Changed** (`scripts/00`–`04`, `docker/web3signer/keys/eth1-app-identity.yaml.template`):
+- KMS (`ECC_SECG_P256K1`) → Azure Key Vault (EC key, curve `P-256K` — the
+  same curve, different name; confirmed Azure Key Vault supports it
+  natively rather than assuming).
+- IAM Identity Center SSO (`aws sso login`) → Entra ID (`az login
+  --use-device-code`) — same device-code-flow shape, different login.
+- IAM role + EC2 instance profile → a VM system-assigned managed identity +
+  an RBAC role assignment. This flipped an ordering assumption: AWS creates
+  the IAM role *before* the EC2 instance that assumes it; Azure only
+  generates a managed identity's principal ID once the VM exists, so the
+  Key Vault access grant now happens in `scripts/02-provision-vm.sh`
+  instead of the Key-Vault-creation script. Worth remembering if anything
+  here gets restructured later — it's not an arbitrary choice, it's a real
+  dependency direction.
+- EC2 + security group → Azure VM + NSG, same IP-scoped-ingress,
+  refreshed-on-IP-change behavior, different az CLI commands underneath.
+- The AWS KMS public-key address derivation (DER/ASN.1 unwrapping) was
+  replaced with an Azure Key Vault version — and turned out *simpler*, not
+  harder: Azure's `az keyvault key show` returns the public key as a plain
+  JWK (`key.x`/`key.y`, base64url, no ASN.1 to parse), where AWS KMS returns
+  a DER-encoded X.509 SubjectPublicKeyInfo blob that has to be unwrapped
+  first. Re-verified with the same kind of synthetic-keypair test as the
+  AWS version (see script 2 above) before trusting it.
+
+**Didn't change at all**: `contracts/BottleRegistry.sol`, every file under
+`api/` and `frontend/`, `hardhat/`, and `docker/docker-compose.yml` (besides
+a couple of comments referencing "KMS" generically). The entire point of
+routing all chain access through Web3Signer rather than embedding a cloud
+SDK anywhere in the app is that the app genuinely doesn't know or care which
+vault is behind it — this pivot is the proof of that design decision paying
+off, not just a claim about it. `QBFT-Network/config/qbftConfigFile.json`
+needed one comment updated (which CLI command produces the alloc address)
+and nothing else — Besu's genesis format has no concept of "cloud provider"
+at all.
+
+**Not carried over from the AWS phase**: the AWS-specific verification
+claims in this document (the AWS KMS address-derivation test, the AWS PR
+#837 field-name lookup) described real work that was actually done, but
+against code that no longer exists in this repo — replaced above with the
+equivalent Azure verification, done fresh, not copy-edited from the old
+claims.
 
 ### 2026-09-04 — Hardhat project root vs. top-level `contracts/`
 

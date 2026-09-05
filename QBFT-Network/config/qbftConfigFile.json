@@ -18,7 +18,7 @@
     "difficulty": "0x1",
     "coinbase": "0x0000000000000000000000000000000000000000",
     "alloc": {
-      "_comment": "Pre-funded accounts for gas. Replace the placeholder key below with the address Web3Signer derives for the app's KMS key (from `aws kms get-public-key` -> Ethereum address, computed by scripts/01-create-kms-key.sh) before generating the real network — see README-BOURBON-PORT.md step 2.",
+      "_comment": "Pre-funded accounts for gas. Replace the placeholder key below with the address Web3Signer derives for the app's Key Vault key (from `az keyvault key show` -> Ethereum address, computed by scripts/01-create-keyvault-and-identity.sh) before generating the real network — see README-BOURBON-PORT.md step 2.",
       "0x0000000000000000000000000000000000000000": {
         "balance": "0x446C3B15F9926687D2C40534FDB564000000000000"
       }

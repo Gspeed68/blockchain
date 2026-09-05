@@ -1,7 +1,7 @@
 name: bourbon-registry
 
 # Brings up: 4 Besu QBFT validators (all on one host for this POC — see
-# scripts/02-provision-ec2.sh for why), Web3Signer in front of validator-1
+# scripts/02-provision-vm.sh for why), Web3Signer in front of validator-1
 # (the app's write path), and Prometheus/Grafana watching all four nodes.
 #
 # Prerequisites (scripts/05-bring-up-stack.sh does all of this for you):
@@ -28,7 +28,7 @@ services:
       - ./besu/validators/validator-1:/data/node:ro
       - besu-data-1:/data/db
     ports:
-      - "8545:8545" # JSON-RPC (also IP-scoped at the SG level on AWS)
+      - "8545:8545" # JSON-RPC (also IP-scoped at the NSG level on Azure)
       - "8546:8546" # WebSocket
       - "30303:30303/tcp"
       - "30303:30303/udp"
@@ -107,9 +107,9 @@ services:
   # Sits in front of besu-validator-1 for writes. The app's backend (api/)
   # talks to THIS service's RPC endpoint, not Besu's directly — Web3Signer
   # answers eth_accounts/eth_sendTransaction/eth_signTransaction itself
-  # (signing with the AWS KMS key over IMDS-sourced instance-role
-  # credentials, per docker/web3signer/keys/eth1-app-identity.yaml) and
-  # forwards every other JSON-RPC method straight through to Besu.
+  # (signing with the Azure Key Vault key over the VM's system-assigned
+  # managed identity, per docker/web3signer/keys/eth1-app-identity.yaml)
+  # and forwards every other JSON-RPC method straight through to Besu.
   web3signer:
     image: consensys/web3signer:24.8.0
     restart: unless-stopped

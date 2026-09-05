@@ -7,15 +7,16 @@ pragma solidity ^0.8.24;
 /// Design notes (read this before touching write logic):
 ///
 /// 1. Single-writer model. This is a *personal* collection app, not a public
-///    marketplace — every write comes from one backend identity (the KMS-backed
-///    Web3Signer key described in README-BOURBON-PORT.md). The contract is
-///    `Ownable`-style: only the address that deployed it (or whichever address
-///    the current owner transfers admin to) may add bottles or record
-///    appraisals. `bottle.owner` is stored for display/provenance purposes,
-///    not as an access-control primitive — there is intentionally no
-///    `transferBottle()` here, because there is no counterparty/marketplace
-///    concept in this app yet. Add one later behind its own KMS identity if
-///    that changes; don't bolt it onto this contract speculatively.
+///    marketplace — every write comes from one backend identity (the Azure
+///    Key Vault-backed Web3Signer key described in README-BOURBON-PORT.md).
+///    The contract is `Ownable`-style: only the address that deployed it
+///    (or whichever address the current owner transfers admin to) may add
+///    bottles or record appraisals. `bottle.owner` is stored for
+///    display/provenance purposes, not as an access-control primitive —
+///    there is intentionally no `transferBottle()` here, because there is
+///    no counterparty/marketplace concept in this app yet. Add one later
+///    behind its own Key Vault identity if that changes; don't bolt it
+///    onto this contract speculatively.
 ///
 /// 2. Appraisals are append-only. `recordAppraisal` never overwrites a prior
 ///    value — it pushes a new entry onto a per-bottle array, so the full

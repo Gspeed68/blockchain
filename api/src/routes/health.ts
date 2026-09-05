@@ -10,7 +10,7 @@ export const healthRouter = Router();
  * A real connectivity check, not just "the process is alive" — it makes
  * one call to Besu and one to Web3Signer and reports both, which is a
  * genuinely useful thing to see explicitly ("is Besu up?" and "does
- * Web3Signer see the KMS key?" are two different failure modes with two
+ * Web3Signer see the Key Vault key?" are two different failure modes with two
  * different fixes).
  */
 healthRouter.get(

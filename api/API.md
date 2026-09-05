@@ -3,7 +3,7 @@
 A REST API in front of the `BottleRegistry` smart contract. Every read
 (`GET`) queries the chain directly (`eth_call`) — there's no database to go
 stale. Every write signs and sends a real transaction through Web3Signer
-(KMS-backed) and waits for it to be mined before responding, unless it's
+(Azure Key Vault-backed) and waits for it to be mined before responding, unless it's
 still pending after ~30s, in which case you get a `202` with a `txHash` to
 poll. See `api/src/chain/writeTransaction.ts` for the full, heavily-commented
 transaction lifecycle (nonce handling, gas estimation, pending vs. confirmed,

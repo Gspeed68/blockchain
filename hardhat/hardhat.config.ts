@@ -36,20 +36,21 @@ const config: HardhatUserConfig = {
     hardhat: {},
 
     // A local `besu --network=dev` or similar, for manual smoke testing
-    // without going anywhere near AWS.
+    // without going anywhere near Azure.
     localhost: {
       url: "http://127.0.0.1:8545",
     },
 
-    // The real target: the private Besu QBFT network on AWS, reached
+    // The real target: the private Besu QBFT network on Azure, reached
     // through Web3Signer rather than Besu's own RPC port. Web3Signer sits
     // in front of Besu and answers eth_accounts / eth_sendTransaction
-    // itself (signing with the AWS KMS key), forwarding everything else
-    // (eth_call, eth_getTransactionReceipt, ...) straight through to Besu.
-    // Pointing Hardhat/ethers at Web3Signer's URL means `signer.sendTransaction`
+    // itself (signing with the Azure Key Vault key over the VM's managed
+    // identity), forwarding everything else (eth_call,
+    // eth_getTransactionReceipt, ...) straight through to Besu. Pointing
+    // Hardhat/ethers at Web3Signer's URL means `signer.sendTransaction`
     // "just works" with no private key ever touching this machine — see
-    // api/src/chain/web3signer.ts for the equivalent flow done by hand
-    // (explicit nonce/gas/receipt handling) rather than through ethers.
+    // api/src/chain/writeTransaction.ts for the equivalent flow done by
+    // hand (explicit nonce/gas/receipt handling) rather than through ethers.
     besuQbft: {
       url: process.env.WEB3SIGNER_RPC_URL || "http://localhost:9000",
       // Besu QBFT networks in this project use a fixed, non-standard
@@ -58,9 +59,10 @@ const config: HardhatUserConfig = {
       // QBFT-Network/genesis/genesis.json ("config.chainId") once the
       // network is generated.
       chainId: Number(process.env.BESU_CHAIN_ID || 190416),
-      // No `accounts` field: Web3Signer exposes the KMS-derived address via
-      // eth_accounts and Hardhat/ethers picks it up as an "unlocked"
-      // account, same as it would for a node with an unlocked keystore.
+      // No `accounts` field: Web3Signer exposes the Key Vault-derived
+      // address via eth_accounts and Hardhat/ethers picks it up as an
+      // "unlocked" account, same as it would for a node with an unlocked
+      // keystore.
     },
   },
 };

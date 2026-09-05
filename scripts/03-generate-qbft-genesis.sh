@@ -8,7 +8,7 @@
 # byte-order or list-vs-string RLP mistake produces a genesis file that
 # looks fine, loads fine, and then either refuses to produce blocks or
 # disagrees between nodes about the validator set, which is a miserable
-# thing to debug on a running EC2 instance. Besu's own generator is the
+# thing to debug on a running Azure VM. Besu's own generator is the
 # tested, canonical implementation, so we shell out to it via Docker instead
 # of reimplementing RLP-encoded QBFT extra data in this repo.
 #
@@ -37,15 +37,15 @@ fi
 
 grep -q '"0x0000000000000000000000000000000000000000"' "${CONFIG_FILE}" && {
   echo "WARNING: qbftConfigFile.json still has the placeholder alloc address."
-  echo "         Run scripts/01-create-kms-and-iam.sh first and replace it with"
-  echo "         the app identity's derived address so it starts pre-funded."
+  echo "         Run scripts/01-create-keyvault-and-identity.sh first and replace"
+  echo "         it with the app identity's derived address so it starts pre-funded."
   echo
 }
 
 mkdir -p "${OUT_DIR}"
 
 # Validator node keys are generated locally by Besu and must stay local —
-# per the project brief, QBFT consensus signing is never KMS-backed (only
+# per the project brief, QBFT consensus signing is never vault-backed (only
 # the app's own transaction-signing identity is). Nothing under
 # QBFT-Network/generated or QBFT-Network/validator-keys should ever be
 # committed (.gitignore already excludes both).
@@ -64,4 +64,4 @@ ls -la "${OUT_DIR}"
 echo
 echo "Next: copy ${OUT_DIR}/genesis.json to QBFT-Network/generated/genesis.json"
 echo "(already there) and each node's key/key.pub into per-validator dirs for"
-echo "docker/besu/docker-compose.yml. See README-BOURBON-PORT.md step 3 (EC2 + genesis)."
+echo "docker/besu/docker-compose.yml. See README-BOURBON-PORT.md step 3 (VM + genesis)."
