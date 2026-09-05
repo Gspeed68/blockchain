@@ -1,0 +1,61 @@
+.condition-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.condition-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.condition-badge__fill {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.condition-badge--good {
+  background: var(--status-good-soft);
+  color: var(--status-good);
+}
+.condition-badge--good .condition-badge__dot {
+  background: var(--status-good);
+}
+
+.condition-badge--warning {
+  background: var(--status-warning-soft);
+  color: var(--status-warning);
+}
+.condition-badge--warning .condition-badge__dot {
+  background: var(--status-warning);
+}
+
+.condition-badge--serious {
+  background: var(--status-serious-soft);
+  color: var(--status-serious);
+}
+.condition-badge--serious .condition-badge__dot {
+  background: var(--status-serious);
+}
+
+.condition-badge--critical {
+  background: var(--status-critical-soft);
+  color: var(--status-critical);
+}
+.condition-badge--critical .condition-badge__dot {
+  background: var(--status-critical);
+}
+
+.condition-badge--neutral {
+  background: var(--status-neutral-soft);
+  color: var(--status-neutral);
+}
+.condition-badge--neutral .condition-badge__dot {
+  background: var(--status-neutral);
+}

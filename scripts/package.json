@@ -1,0 +1,8 @@
+{
+  "name": "bourbon-scripts",
+  "private": true,
+  "description": "Small Node helpers used by the numbered setup scripts (not the app runtime).",
+  "dependencies": {
+    "ethers": "^6.13.2"
+  }
+}

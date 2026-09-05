@@ -1,0 +1,39 @@
+# --- secrets / generated key material: never commit ---
+QBFT-Network/generated/
+QBFT-Network/validator-keys/*
+!QBFT-Network/validator-keys/.gitkeep
+*.env
+.env
+.env.*
+!.env.example
+docker/web3signer/keys/*.yaml
+!docker/web3signer/keys/*.yaml.template
+*.key
+*.pem
+!docker/**/*.example.pem
+*bourbon-registry-key.pem
+
+# --- node / build ---
+node_modules/
+dist/
+build/
+coverage/
+.next/
+
+# hardhat
+hardhat/artifacts/
+hardhat/cache/
+hardhat/typechain-types/
+
+# frontend
+frontend/dist/
+frontend/.vite/
+
+# api
+api/dist/
+
+# misc
+*.log
+*.tsbuildinfo
+.DS_Store
+.aws-sam/

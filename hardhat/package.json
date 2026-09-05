@@ -1,0 +1,20 @@
+{
+  "name": "bourbon-hardhat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Contract development/deploy workspace for the BottleRegistry contract, deployed to the private Besu QBFT network via Web3Signer.",
+  "type": "commonjs",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:besu": "hardhat run scripts/deploy.ts --network besuQbft"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.5",
+    "solc": "^0.8.24",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

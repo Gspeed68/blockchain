@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: besu-validators
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - besu-validator-1:9545
+          - besu-validator-2:9545
+          - besu-validator-3:9545
+          - besu-validator-4:9545
+        labels:
+          project: bourbon-registry
+
+  - job_name: web3signer
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["web3signer:9001"]
+        labels:
+          project: bourbon-registry

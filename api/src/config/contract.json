@@ -1,0 +1,541 @@
+{
+  "_comment": "PLACEHOLDER address — no real deploy has happened yet. The ABI below IS the real compiled BottleRegistry ABI, and this whole API has been smoke-tested end-to-end against a local Hardhat node standing in for Besu+Web3Signer more than once — see README-BOURBON-PORT.md. Run `cd hardhat && npm run deploy:besu` against the real network to overwrite this file with a real address.",
+  "network": "unset",
+  "address": "0x0000000000000000000000000000000000000000",
+  "deployTxHash": null,
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "name": "BottleNotFound",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "field",
+          "type": "string"
+        }
+      ],
+      "name": "EmptyString",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotAdmin",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousAdmin",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newAdmin",
+          "type": "address"
+        }
+      ],
+      "name": "AdminTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "appraisalId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "valueCents",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "source",
+          "type": "string"
+        }
+      ],
+      "name": "AppraisalRecorded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "distillery",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "bottleName",
+          "type": "string"
+        }
+      ],
+      "name": "BottleAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum BottleRegistry.Condition",
+          "name": "condition",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint16",
+          "name": "fillLevelBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "BottleConditionUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "distillery",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "bottleName",
+          "type": "string"
+        },
+        {
+          "internalType": "uint16",
+          "name": "proof",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint16",
+          "name": "releaseYear",
+          "type": "uint16"
+        },
+        {
+          "internalType": "uint64",
+          "name": "purchaseDate",
+          "type": "uint64"
+        },
+        {
+          "internalType": "uint256",
+          "name": "purchasePriceCents",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum BottleRegistry.Condition",
+          "name": "condition",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint16",
+          "name": "fillLevelBps",
+          "type": "uint16"
+        },
+        {
+          "internalType": "string",
+          "name": "photoURI",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "photoHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "addBottle",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "name": "appraisalCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "bottleCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAllBottleIds",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getAppraisals",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "bottleId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "valueCents",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "timestamp",
+              "type": "uint64"
+            },
+            {
+              "internalType": "string",
+              "name": "source",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "note",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "recordedBy",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BottleRegistry.Appraisal[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBottle",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "distillery",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "bottleName",
+              "type": "string"
+            },
+            {
+              "internalType": "uint16",
+              "name": "proof",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint16",
+              "name": "releaseYear",
+              "type": "uint16"
+            },
+            {
+              "internalType": "uint64",
+              "name": "purchaseDate",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint256",
+              "name": "purchasePriceCents",
+              "type": "uint256"
+            },
+            {
+              "internalType": "enum BottleRegistry.Condition",
+              "name": "condition",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint16",
+              "name": "fillLevelBps",
+              "type": "uint16"
+            },
+            {
+              "internalType": "string",
+              "name": "photoURI",
+              "type": "string"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "photoHash",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "createdAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bool",
+              "name": "exists",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct BottleRegistry.Bottle",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLatestAppraisal",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "id",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "bottleId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "valueCents",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "timestamp",
+              "type": "uint64"
+            },
+            {
+              "internalType": "string",
+              "name": "source",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "note",
+              "type": "string"
+            },
+            {
+              "internalType": "address",
+              "name": "recordedBy",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct BottleRegistry.Appraisal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "valueCents",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "note",
+          "type": "string"
+        }
+      ],
+      "name": "recordAppraisal",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "appraisalId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newAdmin",
+          "type": "address"
+        }
+      ],
+      "name": "transferAdmin",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "bottleId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum BottleRegistry.Condition",
+          "name": "condition",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint16",
+          "name": "fillLevelBps",
+          "type": "uint16"
+        }
+      ],
+      "name": "updateCondition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}
