@@ -1,0 +1,29 @@
+# --- secrets: never commit ---
+*.env
+.env
+.env.*
+!.env.example
+
+# --- node / build ---
+node_modules/
+dist/
+build/
+coverage/
+
+# hardhat
+hardhat/artifacts/
+hardhat/cache/
+hardhat/typechain-types/
+
+# frontend
+frontend/dist/
+frontend/.vite/
+
+# api
+api/dist/
+api/uploads/
+
+# misc
+*.log
+*.tsbuildinfo
+.DS_Store

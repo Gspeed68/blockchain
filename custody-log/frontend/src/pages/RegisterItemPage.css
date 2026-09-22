@@ -1,0 +1,35 @@
+.register-item-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.register-item-page__intro {
+  margin: 8px 0 24px;
+  color: var(--text-secondary);
+}
+
+.register-item-page__intro code {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.register-item-form {
+  padding: 22px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.field--grow {
+  grid-column: 1 / -1;
+}
+
+.register-item-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}

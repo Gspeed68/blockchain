@@ -1,0 +1,11 @@
+import { createApp } from "./app";
+import { env } from "./config/env";
+import { logger } from "./logger";
+
+const app = createApp();
+
+app.listen(env.PORT, () => {
+  logger.info(`Custody Log API listening on :${env.PORT}`);
+  logger.info(`  Besu RPC:       ${env.BESU_RPC_URL}`);
+  logger.info(`  Web3Signer RPC: ${env.WEB3SIGNER_RPC_URL}`);
+});

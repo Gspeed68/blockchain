@@ -1,0 +1,110 @@
+.custody-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.custody-timeline__item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-left: 2px solid var(--border);
+  padding-left: 20px;
+  margin-left: 12px;
+  position: relative;
+}
+
+.custody-timeline__item:last-child {
+  border-left-color: transparent;
+}
+
+.custody-timeline__icon {
+  position: absolute;
+  left: -19px;
+  top: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+}
+
+.custody-timeline__item--good .custody-timeline__icon {
+  background: var(--status-good-soft);
+  border-color: var(--status-good);
+}
+.custody-timeline__item--warning .custody-timeline__icon {
+  background: var(--status-warning-soft);
+  border-color: var(--status-warning);
+}
+.custody-timeline__item--serious .custody-timeline__icon {
+  background: var(--status-serious-soft);
+  border-color: var(--status-serious);
+}
+.custody-timeline__item--critical .custody-timeline__icon {
+  background: var(--status-critical-soft);
+  border-color: var(--status-critical);
+}
+
+.custody-timeline__body {
+  flex: 1;
+  padding-left: 18px;
+  min-width: 0;
+}
+
+.custody-timeline__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.custody-timeline__type {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.custody-timeline__date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.custody-timeline__handoff {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+
+.custody-timeline__location {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.custody-timeline__notes {
+  margin: 6px 0 0;
+  font-size: 0.86rem;
+  color: var(--text-secondary);
+}
+
+.custody-timeline__doc {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+.custody-timeline__doc:hover {
+  text-decoration: underline;
+}
+
+.custody-timeline__meta {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}

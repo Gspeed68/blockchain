@@ -1,3 +1,8 @@
+> This repo also hosts a second, standalone app: **[`custody-log/`](custody-log/README.md)**
+> — an on-chain chain-of-custody log for physical items (pharma, fine art,
+> freight). Same architectural pattern as below, its own contract/API/frontend,
+> no shared infrastructure.
+
 # Bourbon Registry
 
 A personal bourbon/whiskey collection tracker with on-chain provenance: bottle

@@ -1,0 +1,47 @@
+.tx-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.tx-banner--submitting,
+.tx-banner--pending {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tx-banner--confirmed {
+  background: var(--status-good-soft);
+  color: var(--status-good);
+}
+
+.tx-banner--error {
+  background: var(--status-critical-soft);
+  color: var(--status-critical);
+}
+
+.tx-banner__spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.tx-banner__hash {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
