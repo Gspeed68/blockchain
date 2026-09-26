@@ -1,0 +1,145 @@
+/* Design tokens. Slot-1 "blue" is this app's brand accent (reads as steel/
+   freight blue, suiting a logistics/custody app) and is reused, not
+   re-picked, anywhere a single accent color is needed. Status colors are
+   the same categorical/status scheme as the sibling bourbon-registry app,
+   kept independent per app rather than shared, per this repo's
+   standalone-project convention. */
+:root {
+  color-scheme: light;
+
+  --surface-0: #f7f8fa; /* page plane */
+  --surface-1: #fcfcfd; /* card surface */
+  --surface-2: #ffffff;
+  --text-primary: #12161c;
+  --text-secondary: #4c545f;
+  --text-muted: #838d99;
+  --border: rgba(11, 15, 20, 0.1);
+  --border-strong: #c3cad3;
+
+  --accent: #2563eb; /* categorical slot 1 (blue) — brand accent */
+  --accent-ink: #ffffff;
+  --accent-soft: #e3ecfd;
+
+  --status-good: #0ca30c;
+  --status-good-soft: #e7f6e5;
+  --status-warning: #b8790a;
+  --status-warning-soft: #fdf1da;
+  --status-serious: #c25a34;
+  --status-serious-soft: #fbe9e0;
+  --status-critical: #d03b3b;
+  --status-critical-soft: #fbe4e4;
+  --status-neutral: #4c545f;
+  --status-neutral-soft: #eceef1;
+
+  --shadow-card: 0 1px 2px rgba(18, 22, 28, 0.04), 0 8px 24px -12px rgba(18, 22, 28, 0.18);
+  --shadow-card-hover: 0 4px 10px rgba(18, 22, 28, 0.06), 0 16px 32px -14px rgba(18, 22, 28, 0.24);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #0c0f13;
+    --surface-1: #15191f;
+    --surface-2: #1c2127;
+    --text-primary: #f4f6f8;
+    --text-secondary: #c3cad3;
+    --text-muted: #8b93a0;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-strong: #363d47;
+
+    --accent: #5b8ef2;
+    --accent-ink: #0c0f13;
+    --accent-soft: #1c2a44;
+
+    --status-good: #0ca30c;
+    --status-good-soft: #17321a;
+    --status-warning: #c98500;
+    --status-warning-soft: #332a10;
+    --status-serious: #d97a52;
+    --status-serious-soft: #33231a;
+    --status-critical: #e66767;
+    --status-critical-soft: #3a1f1f;
+    --status-neutral: #c3cad3;
+    --status-neutral-soft: #23272e;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+    --shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 32px -14px rgba(0, 0, 0, 0.6);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #0c0f13;
+  --surface-1: #15191f;
+  --surface-2: #1c2127;
+  --text-primary: #f4f6f8;
+  --text-secondary: #c3cad3;
+  --text-muted: #8b93a0;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: #363d47;
+
+  --accent: #5b8ef2;
+  --accent-ink: #0c0f13;
+  --accent-soft: #1c2a44;
+
+  --status-good: #0ca30c;
+  --status-good-soft: #17321a;
+  --status-warning: #c98500;
+  --status-warning-soft: #332a10;
+  --status-serious: #d97a52;
+  --status-serious-soft: #33231a;
+  --status-critical: #e66767;
+  --status-critical-soft: #3a1f1f;
+  --status-neutral: #c3cad3;
+  --status-neutral-soft: #23272e;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.5);
+  --shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.35), 0 16px 32px -14px rgba(0, 0, 0, 0.6);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+code,
+.mono {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}

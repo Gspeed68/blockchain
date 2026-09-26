@@ -1,0 +1,18 @@
+# Web3Signer signing-key metadata for the app's ONE transaction-signing
+# identity (see scripts/01-create-keyvault-and-identity.sh — the key is an
+# Azure Key Vault EC key on curve P-256K/secp256k1; QBFT validator
+# consensus signing is separate and always local, never vault-backed).
+#
+# This is a TEMPLATE. scripts/04-configure-web3signer.sh copies it to
+# eth1-app-identity.yaml with the real vault/tenant values substituted in —
+# the rendered file is gitignored (nothing secret in it by itself since
+# auth-mode is managed-identity, no client secret involved, but keep
+# account-specific names out of git regardless).
+type: "azure-key"
+vault-name: "${AZURE_KEY_VAULT_NAME}"
+key-name: "custody-log-signer"
+tenant-id: "${AZURE_TENANT_ID}"
+# SYSTEM_ASSIGNED_MANAGED_IDENTITY uses the VM's own managed identity (see
+# scripts/02-provision-vm.sh, which grants it Key Vault Crypto User scoped
+# to exactly this key) — no client-id/client-secret anywhere.
+auth-mode: "SYSTEM_ASSIGNED_MANAGED_IDENTITY"
