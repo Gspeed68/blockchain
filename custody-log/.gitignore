@@ -1,8 +1,16 @@
-# --- secrets: never commit ---
+# --- secrets / generated key material: never commit ---
 *.env
 .env
 .env.*
 !.env.example
+QBFT-Network/generated/
+QBFT-Network/validator-keys/*
+!QBFT-Network/validator-keys/.gitkeep
+docker/web3signer/keys/*.yaml
+!docker/web3signer/keys/*.yaml.template
+docker/besu/validators/
+*.key
+*.pem
 
 # --- node / build ---
 node_modules/

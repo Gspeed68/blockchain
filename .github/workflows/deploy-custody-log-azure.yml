@@ -1,0 +1,123 @@
+name: Deploy custody-log to Azure
+
+# Manual trigger only, on purpose: this provisions real, billable Azure
+# resources (a Key Vault, a VM). It should never fire on a push or PR
+# without someone deliberately asking for a deployment right now.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch/tag/commit to deploy"
+        required: true
+        default: "main"
+      allowed_ssh_cidr:
+        description: "CIDR to open SSH/RPC/monitoring ports to (e.g. 203.0.113.5/32). Leave blank for no direct inbound access at all — deployment/verification don't need one."
+        required: false
+        default: ""
+      force_redeploy:
+        description: "Deploy a fresh CustodyRegistry instance even if one is already live (abandons its existing data)"
+        required: false
+        default: "false"
+        type: boolean
+      azure_location:
+        description: "Azure region"
+        required: false
+        default: "eastus"
+
+# Required for azure/login's OIDC federated-credential flow — no client
+# secret is stored in this repo at all, only the app registration's IDs.
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy-custody-log-azure
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: azure-custody-log
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure (OIDC — no stored client secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install script helper dependencies
+        working-directory: custody-log/scripts
+        run: npm install --no-audit --no-fund
+
+      - name: Create resource group, Key Vault, and signing key
+        working-directory: custody-log
+        env:
+          AZURE_LOCATION: ${{ github.event.inputs.azure_location }}
+        run: bash scripts/01-create-keyvault-and-identity.sh
+
+      - name: Provision (or reuse) the VM
+        working-directory: custody-log
+        env:
+          AZURE_LOCATION: ${{ github.event.inputs.azure_location }}
+          ALLOWED_SSH_CIDR: ${{ github.event.inputs.allowed_ssh_cidr }}
+        run: bash scripts/02-provision-vm.sh
+
+      - name: Read the VM's public IP
+        id: vm
+        run: echo "public_ip=$(cat /tmp/custody-log-vm-public-ip.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the VM's guest agent to be ready for run-command
+        run: |
+          for i in $(seq 1 30); do
+            if az vm run-command invoke \
+                --resource-group custody-log-rg \
+                --name custody-log-besu-host \
+                --command-id RunShellScript \
+                --scripts "echo ready" >/dev/null 2>&1; then
+              echo "Guest agent ready."
+              exit 0
+            fi
+            echo "Not ready yet, waiting 10s… (attempt $i/30)"
+            sleep 10
+          done
+          echo "ERROR: VM guest agent never became ready for run-command." >&2
+          exit 1
+
+      - name: Deploy the stack on the VM (genesis, Web3Signer config, chain, contract, app)
+        # `az vm run-command invoke` itself exits non-zero when the script it
+        # ran exits non-zero (ci-remote-deploy.sh runs under `set -euo
+        # pipefail`), and GitHub Actions runs this step under `bash -eo
+        # pipefail` by default, so a remote failure fails this step even
+        # though the output is piped through `tee` below.
+        run: |
+          az vm run-command invoke \
+            --resource-group custody-log-rg \
+            --name custody-log-besu-host \
+            --command-id RunShellScript \
+            --scripts "@custody-log/scripts/ci-remote-deploy.sh" \
+            --parameters \
+              "REPO_URL=${{ github.server_url }}/${{ github.repository }}.git" \
+              "REF=${{ github.event.inputs.ref }}" \
+              "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" \
+              "FORCE_REDEPLOY=${{ github.event.inputs.force_redeploy }}" \
+            -o json | tee /tmp/run-command-result.json
+          echo "--- stdout/stderr from the VM ---"
+          jq -r '.value[].message' /tmp/run-command-result.json
+
+      - name: Summary
+        run: |
+          echo "## custody-log deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- VM public IP: \`${{ steps.vm.outputs.public_ip }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ github.event.inputs.allowed_ssh_cidr }}" ]; then
+            echo "- Frontend: http://${{ steps.vm.outputs.public_ip }}:5174" >> "$GITHUB_STEP_SUMMARY"
+            echo "- API: http://${{ steps.vm.outputs.public_ip }}:4100" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- No inbound CIDR was opened (allowed_ssh_cidr left blank), so the app" >> "$GITHUB_STEP_SUMMARY"
+            echo "  isn't reachable from outside yet. Re-run this workflow with your IP in" >> "$GITHUB_STEP_SUMMARY"
+            echo "  allowed_ssh_cidr to open it up, or use \`az vm run-command\` for further" >> "$GITHUB_STEP_SUMMARY"
+            echo "  access without opening the network at all." >> "$GITHUB_STEP_SUMMARY"
+          fi
